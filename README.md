@@ -12,7 +12,4 @@ cd nixos-config
 
 # Activate the system
 sudo nix run .#world -- boot # switch/test
-
-# Activate the home environment
-nix run .#home
 ```
