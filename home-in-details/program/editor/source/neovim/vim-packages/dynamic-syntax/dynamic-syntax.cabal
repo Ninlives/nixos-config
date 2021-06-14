@@ -1,0 +1,23 @@
+name:                dynamic-syntax
+version:             0.1.0.0
+synopsis:            Haskell Neovim plugins
+description:         Personal project to manage plugin dependencies.
+-- Take a license that you like. Only relevant if you want to make your config
+-- used by other people.
+--license:             BSD3
+--license-file:        LICENSE
+category:            Neovim
+build-type:          Simple
+--extra-source-files:  README.md
+cabal-version:       >=1.10
+
+executable dynamic-syntax
+  main-is:             nvim.hs
+  hs-source-dirs:      ., src
+  other-modules:       Neovim.DynSyntax
+                       Neovim.DynSyntax.Implementation
+  build-depends:       base >= 4.7 && < 5
+                     , nvim-hs
+                     -- The dependencies below are only needed for the example plugin
+                     , regex-pcre
+  default-language:    Haskell2010

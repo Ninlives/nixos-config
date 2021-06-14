@@ -1,0 +1,53 @@
+<touchégg>
+    <settings>
+        <property name="animation_delay">150</property>
+        <property name="action_execute_threshold">20</property>
+        <property name="color">auto</property>
+        <property name="borderColor">auto</property>
+    </settings>
+
+    <application name="All">
+
+        <gesture type="SWIPE" fingers="4" direction="DOWN">
+            <action type="RUN_COMMAND">
+                <repeat>false</repeat>
+                <command>@translate@</command>
+                <on>begin</on>
+            </action>
+        </gesture>
+
+        <!-- <gesture type="SWIPE" fingers="4" direction="LEFT">  -->
+        <!--     <action type="CHANGE_DESKTOP">                   -->
+        <!--         <direction>auto</direction>                  -->
+        <!--         <animate>true</animate>                      -->
+        <!--         <animationPosition>auto</animationPosition>  -->
+        <!--     </action>                                        -->
+        <!-- </gesture>                                           -->
+
+        <!-- <gesture type="SWIPE" fingers="4" direction="RIGHT"> -->
+        <!--     <action type="CHANGE_DESKTOP">                   -->
+        <!--         <direction>auto</direction>                  -->
+        <!--         <animate>true</animate>                      -->
+        <!--         <animationPosition>auto</animationPosition>  -->
+        <!--     </action>                                        -->
+        <!-- </gesture>                                           -->
+
+        <!-- <gesture type="PINCH" fingers="4" direction="OUT"> -->
+        <!--     <action type="SEND_KEYS">                      -->
+        <!--         <repeat>false</repeat>                     -->
+        <!--         <keys>Super_L</keys>                       -->
+        <!--         <on>begin</on>                             -->
+        <!--     </action>                                      -->
+        <!-- </gesture>                                         -->
+
+        <!-- <gesture type="PINCH" fingers="4" direction="IN">  -->
+        <!--     <action type="SEND_KEYS">                      -->
+        <!--         <repeat>false</repeat>                     -->
+        <!--         <modifiers>Super_L</modifiers>             -->
+        <!--         <keys>A</keys>                             -->
+        <!--         <on>begin</on>                             -->
+        <!--     </action>                                      -->
+        <!-- </gesture>                                         -->
+
+    </application>
+</touchégg>
