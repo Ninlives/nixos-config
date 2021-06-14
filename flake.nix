@@ -178,10 +178,6 @@
             fi
           '';
         };
-        home = mkApp {
-          drv = self.homeManagerConfigurations.mlatus.activationPackage;
-          exePath = "/activate";
-        };
         net = mkApp {
           drv = writeShellScriptBin "net" ''
             tmpDir=$(mktemp -d)

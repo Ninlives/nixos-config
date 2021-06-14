@@ -44,6 +44,7 @@ in
 
   xdg.mimeApps.associations.removed."application/pdf" = "draw.desktop";
   xdg.mimeApps.associations.added."application/vnd.openxmlformats-officedocument.presentationml.presentation" = "impress.desktop";
+  xdg.mimeApps.associations.added."application/msword" = "writer.desktop";
 
   persistent.boxes = [
     ".local/tldrc"
