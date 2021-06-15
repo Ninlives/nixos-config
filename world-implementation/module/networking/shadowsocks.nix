@@ -17,18 +17,6 @@ let
   configFile = config.sops.templates.ss-config.path;
   plh = config.sops.placeholder;
   aclFile = "${inputs.data.content.shadowsocks}/plist.acl";
-
-  fetchACL = pkgs.writeShellScriptBin "fetch-acl" ''
-    PATH=${lib.makeBinPath [ coreutils curl ]}
-    # <<<sh>>>
-    set -e
-    cd "$(mktemp -d)"
-    curl -o plist.acl https://raw.githubusercontent.com/NateScarlet/gfwlist.acl/master/gfwlist.acl
-
-    cat plist.acl
-    # >>>sh<<<
-  '';
-
 in {
   users.users.${proxy.user}.isSystemUser = true;
   users.groups.${proxy.group} = { };
@@ -60,6 +48,4 @@ in {
         toString proxy.redirPort
       }";
   };
-
-  environment.systemPackages = [ fetchACL ];
 }
