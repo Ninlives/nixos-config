@@ -5,20 +5,6 @@ let
   inherit (constant.seal) chest;
   inherit (constant.proxy) dnsPort;
   conf-file = "${inputs.data.content.smartdns}/accelerate.conf";
-  fetchDNS = writeShellScriptBin "fetch-dns" ''
-    PATH=${
-      lib.makeBinPath [ coreutils gnugrep gnused gnumake git ]
-    }
-    # <<<sh>>>
-    set -e
-    cd "$(mktemp -d)"
-    git clone --depth 1 https://github.com/felixonmars/dnsmasq-china-list.git src
-    cd src
-    make smartdns SERVER=cn 
-
-    cat ./*.smartdns.conf
-    # >>>sh<<<
-  '';
 in {
   services.smartdns = {
     enable = true;
@@ -60,8 +46,4 @@ in {
   };
 
   networking.resolvconf.useLocalResolver = true;
-  environment.systemPackages = [ fetchDNS ];
-
-  networking.firewall.allowedTCPPorts = [ 37837 ];
-  networking.firewall.allowedUDPPorts = [ 52637 ];
 }
