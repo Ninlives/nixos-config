@@ -6,7 +6,7 @@ with pkgs; {
     space = /space/Redirect;
   };
   proxy = rec {
-    mark = "0xbb";
+    mark = 187;
     group = "outcha";
     user = group;
     address = "127.0.0.1";

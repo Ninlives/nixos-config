@@ -33,10 +33,10 @@ function vpnt(){
     local f=$HOME/.cache/proxy
     if [[ ! -e $f || "$(cat $f)" == "v2ray" ]];then
         systemctl stop v2ray.service
-        systemctl start shadowsocks.service shadowsocks-acl.service shadowsocks-transparent.service 
+        systemctl start v2ray-ss.service
         echo shadowsocks > $f
     else
-        systemctl stop shadowsocks.service shadowsocks-acl.service shadowsocks-transparent.service 
+        systemctl stop v2ray-ss.service
         systemctl start v2ray.service
         echo v2ray > $f
     fi

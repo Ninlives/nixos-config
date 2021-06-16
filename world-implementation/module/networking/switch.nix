@@ -27,7 +27,7 @@ let
     "-d 192.168.0.0/16"
     "-d 224.0.0.0/4"
     "-d 240.0.0.0/4"
-    "-m mark --mark ${proxy.mark}"
+    "-m mark --mark ${toString proxy.mark}"
     "-m owner --gid-owner ${proxy.group}"
   ];
 
