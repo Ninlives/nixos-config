@@ -1,12 +1,8 @@
-{ config, lib, pkgs, ... }:
+{ config, lib, pkgs, inputs, ... }:
 let
   inherit (pkgs) fetchurl;
   inherit (lib.hm) dag;
   inherit (lib.generators) toYAML;
-  zhwiki-dict = fetchurl {
-    url = "https://github.com/felixonmars/fcitx5-pinyin-zhwiki/releases/download/0.2.2/zhwiki-20210301.dict.yaml";
-    sha256 = "04d3102znna0sbcqvgmx2gv59ghaanija240lyji65iqgfq3czwc";
-  };
 in {
   xdg.configFile = {
     "ibus/rime/default.custom.yaml".text =
@@ -20,7 +16,7 @@ in {
       use_preset_vocabulary = true;
       import_tables = [ "luna_pinyin" "zhwiki" ];
     };
-    "ibus/rime/zhwiki.dict.yaml".source = zhwiki-dict;
+    "ibus/rime/zhwiki.dict.yaml".source = inputs.data.content.zhwiki-dict + /zhwiki.dict.yaml;
   };
 
   home.activation.rime-clear = dag.entryBefore [ "linkGeneration" ] ''
