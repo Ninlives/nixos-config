@@ -41,6 +41,7 @@ jobs:
         upload_url: ${{ steps.create_release.outputs.upload_url }}
         asset_path: ./result
         asset_name: nixos-${{ steps.date.outputs.date }}.img
+        asset_content_type: application/octet-stream
     - name: Clean-up releases
       uses: dev-drprasad/delete-older-releases@v0.1.0
       with:
