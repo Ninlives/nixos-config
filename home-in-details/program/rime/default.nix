@@ -16,7 +16,7 @@ in {
       use_preset_vocabulary = true;
       import_tables = [ "luna_pinyin" "zhwiki" ];
     };
-    "ibus/rime/zhwiki.dict.yaml".source = inputs.data.content.zhwiki-dict + /zhwiki.dict.yaml;
+    "ibus/rime/zhwiki.dict.yaml".source = inputs.data.content.zhwiki-dict;
   };
 
   home.activation.rime-clear = dag.entryBefore [ "linkGeneration" ] ''

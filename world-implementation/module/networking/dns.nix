@@ -4,7 +4,7 @@ let
     writeShellScript writeShellScriptBin coreutils gnugrep gnused gnumake git;
   inherit (constant.seal) chest;
   inherit (constant.proxy) dnsPort;
-  conf-file = "${inputs.data.content.smartdns}/accelerate.conf";
+  conf-file = "${inputs.data.content.smartdns}";
 in {
   services.smartdns = {
     enable = true;
