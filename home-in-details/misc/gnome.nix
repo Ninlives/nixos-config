@@ -4,15 +4,10 @@ let
   inherit (out-of-world) dirs;
   inherit (lib) concatMapStringsSep;
   inherit (lib.hm.gvariant) mkTuple;
-  inherit (pkgs) gnome3 sweet bibata-cursors;
-  inherit (pkgs.gnomeExtensions)
-    dash-to-dock appindicator mpris-indicator-button;
-  inherit (pkgs.nixos-cn.gnome-extensions)
-    tray-icons steal-my-focus dynamic-panel-transparent pixel-saver
-    compiz-windows-effect x11gestures;
-  inherit (pkgs.nixos-cn.gnome-themes)
-    gruvbox-icon flat-remix-gtk flat-remix-gnome;
-in {
+in with pkgs;
+with pkgs.gnomeExtensions;
+with pkgs.nixos-cn.gnome-extensions;
+with pkgs.nixos-cn.gnome-themes; {
   home.packages = [
     dash-to-dock
     mpris-indicator-button
@@ -108,8 +103,9 @@ in {
       show-battery-percentage = true;
     };
     "org/gnome/desktop/calendar".show-weekdate = true;
-    "org/gnome/desktop/background".picture-uri =
-      "file://${toString (inputs.data.content.resources + /wallpapers/mountain.jpg)}";
+    "org/gnome/desktop/background".picture-uri = "file://${
+        toString (inputs.data.content.resources + /wallpapers/mountain.jpg)
+      }";
 
     # Extensions
 
