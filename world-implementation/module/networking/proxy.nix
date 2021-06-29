@@ -123,7 +123,6 @@ in {
   systemd.services.v2ray-ss = {
     description = "v2ray Daemon";
     after = [ "network.target" ];
-    wantedBy = [ "multi-user.target" ];
     path = [ pkgs.v2ray ];
     script = ''
       exec v2ray -config ${config.sops.templates.v2ray-ss.path}
