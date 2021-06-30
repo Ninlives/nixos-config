@@ -6,6 +6,7 @@ in
 {
   imports = [ 
     (modulesPath + "/profiles/qemu-guest.nix") 
+    (modulesPath + "/profiles/hardened.nix")
   ];
   boot = {
     loader.grub.device = "/dev/sda";
