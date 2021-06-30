@@ -26,4 +26,6 @@ in
   sops.secrets.v-http-pass = v "http-pass";
 
   sops.secrets.t-nix-token = t "nix-bot-token";
+
+  imports = [ ./encrypt ];
 }
