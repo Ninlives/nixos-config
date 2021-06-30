@@ -36,14 +36,6 @@ in {
     ".cache/nix-index"
   ];
 
-  home.packages = [
-    (pkgs.runCommand "paths" { } ''
-      mkdir -p $out/share/nix
-      cd $out/share/nix
-      ln -s ${inputs.nixpkgs} nixpkgs
-      ln -s ${inputs.home-manager} home-manager
-    '')
-  ];
   home.activation.scratch = dag.entryAfter [ "writeBoundary" ] ''
     mkdir -p ${homeDirectory}/Scratch
   '';

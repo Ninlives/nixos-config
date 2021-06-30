@@ -23,6 +23,7 @@ in
     nixfmt
     moreutils
     encfs
+    git-crypt
 
     # GUI
     zoom-us
