@@ -115,19 +115,6 @@
 
               users.users.${constant.user.name}.extraGroups =
                 [ config.users.groups.keys.name ];
-
-              sops.secrets.v-root-location = dump;
-              sops.secrets.v-secret-path = dump;
-              sops.secrets.v-internal-port = dump;
-              sops.secrets.v-host = dump;
-              sops.secrets.email = dump;
-              sops.dumped-secrets = [
-                "v-root-location"
-                "v-secret-path"
-                "v-internal-port"
-                "v-host"
-                "email"
-              ];
             })
         ];
         preprocess =
@@ -138,22 +125,23 @@
           preprocess.config.home-manager.users.${constant.user.name}.nixosConfig);
       };
 
-      deploy.nodes.cyber = {
+      deploy.nodes.cyber = let
+        definition = nixpkgs.lib.nixosSystem {
+          inherit system specialArgs;
+          modules = [
+            ./cyber-definitions
+            ./secrets
+            (dirs.world.option + /secrets.nix)
+            sops-nix.nixosModules.sops
+            external.nixosModules.nixos-cn
+            ({ ... }: { sops.sshKeyPaths = [ "/var/lib/sops/vultr" ]; })
+          ];
+        };
+      in {
         sshUser = "root";
-        hostname = "<placeholder>";
-        profiles.system.path = deploy-rs.lib.${system}.activate.nixos
-          (nixpkgs.lib.nixosSystem {
-            inherit system specialArgs;
-            modules = [
-              ./cyber-definitions
-              ./secrets
-              ./dumped-secrets
-              (dirs.world.option + /sops-dump.nix)
-              sops-nix.nixosModules.sops
-              external.nixosModules.nixos-cn
-              ({ ... }: { sops.sshKeyPaths = [ "/var/lib/sops/vultr" ]; })
-            ];
-          });
+        hostname = definition.config.secrets.decrypted.v-host;
+        profiles.system.path =
+          deploy-rs.lib.${system}.activate.nixos definition;
       };
 
       legacyPackages.${system} = import nixpkgs {
@@ -180,14 +168,7 @@
         };
         net = mkApp {
           drv = writeShellScriptBin "net" ''
-            tmpDir=$(mktemp -d)
-            cp -r --no-preserve=all "${self}/." "$tmpDir"
-            cd "$tmpDir"
-            ${self.nixosConfigurations.mlatus.config.sops.dumpCmd} "$tmpDir/dumped-secrets"
-            ${git}/bin/git add .
-            ${
-              deploy-rs.packages.${system}.deploy-rs
-            }/bin/deploy --hostname "$1" "$tmpDir"
+            ${deploy-rs.packages.${system}.deploy-rs}/bin/deploy
           '';
         };
       };

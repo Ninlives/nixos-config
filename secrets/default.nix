@@ -8,22 +8,15 @@ in
 {
   sops.defaultSopsFile = ./data/tokens.yaml;
 
-  sops.secrets.email = {};
-
   sops.secrets.s-server = s "server";
   sops.secrets.s-port = s "port";
   sops.secrets.s-method = s "method";
   sops.secrets.s-password = s "password";
 
   sops.secrets.v-id = v "id";
-  sops.secrets.v-root-location = v "root-location";
   sops.secrets.v-secret-path = v "secret-path";
   sops.secrets.v-internal-port = v "internal-port";
   sops.secrets.v-host = v "host";
-
-  sops.secrets.v-http-port = v "http-port";
-  sops.secrets.v-http-user = v "http-user";
-  sops.secrets.v-http-pass = v "http-pass";
 
   sops.secrets.t-nix-token = t "nix-bot-token";
 

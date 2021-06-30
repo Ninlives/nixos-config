@@ -3,7 +3,7 @@ with pkgs;
 with lib;
 let
   plh = config.sops.placeholder;
-  dp = config.sops.dumped;
+  dp = config.secrets.decrypted;
   cookie = writeShellScript "cookie" ''
     ${coreutils}/bin/shuf -n 1 ${./words}
   '';
