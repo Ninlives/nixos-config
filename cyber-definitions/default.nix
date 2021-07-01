@@ -3,10 +3,13 @@ with pkgs;
 with lib;
 let
   plh = config.sops.placeholder;
+  tpl = config.sops.templates;
   dp = config.secrets.decrypted;
   cookie = writeShellScript "cookie" ''
     ${coreutils}/bin/shuf -n 1 ${./words}
   '';
+  groups = config.users.groups;
+  users = config.users.users;
 in {
   imports = [ ./machine.nix ];
 
@@ -17,6 +20,9 @@ in {
   networking.firewall.allowedTCPPorts = [ 80 443 ];
   networking.firewall.allowedUDPPorts = [ 443 ];
   services.nginx.enable = true;
+  systemd.services.nginx.serviceConfig.SupplementaryGroups =
+    [ groups.keys.name ];
+
   services.nginx.virtualHosts.${dp.v-host} = {
     forceSSL = true;
     enableACME = true;
@@ -40,9 +46,9 @@ in {
 
   services.v2ray = {
     enable = true;
-    configFile = config.sops.templates.v2ray.path;
+    configFile = tpl.v2ray.path;
   };
-  systemd.services.v2ray.restartTriggers = [ config.sops.templates.v2ray.file ];
+  systemd.services.v2ray.restartTriggers = [ tpl.v2ray.file ];
   sops.templates.v2ray.content = builtins.toJSON {
     log = {
       access = "/tmp/v2ray_access.log";
@@ -73,39 +79,39 @@ in {
   users.groups.nixbot = { };
   users.users.nixbot = {
     createHome = true;
-    group = "nixbot";
+    group = groups.nixbot.name;
     isSystemUser = true;
     home = "/var/lib/nixbot-telegram";
   };
 
   nix.trustedUsers = [ "root" "nixbot" ];
 
-  systemd.services.nixbot = {
+  systemd.services.nixbot = let
+    bot = (builtins.getFlake
+      "github:Ninlives/nixbot-telegram/c463a41ad7ce8bbb976d7e2a4d970569ea22f5e6").defaultPackage.${system};
+  in {
+    enable = false;
     description = "nix bot";
     after = [ "network.target" ];
     wantedBy = [ "multi-user.target" ];
-    path = [
-      (builtins.getFlake
-        "github:Ninlives/nixbot-telegram/c463a41ad7ce8bbb976d7e2a4d970569ea22f5e6").defaultPackage.${system}
-    ];
     serviceConfig = {
-      User = "nixbot";
-      Group = "nixbot";
-      SupplementaryGroups = [ config.users.groups.keys.name ];
+      User = users.nixbot.name;
+      Group = groups.nixbot.name;
+      SupplementaryGroups = [ groups.keys.name ];
       Restart = "always";
       MemoryMax = "256M";
       OOMPolicy = "kill";
-      WorkingDirectory = "/var/lib/nixbot-telegram";
+      WorkingDirectory = users.nixbot.home;
     };
     script = ''
-      exec nixbot-telegram ${config.sops.templates.nixbot.path}
+      ${bot}/bin/nixbot-telegram ${tpl.nixbot.path}
     '';
-    restartTriggers = [ config.sops.templates.nixbot.file ];
+    restartTriggers = [ tpl.nixbot.file ];
   };
   sops.templates.nixbot = let nixpkgs = pkgs.path;
   in {
-    owner = "nixbot";
-    group = "nixbot";
+    owner = users.nixbot.name;
+    group = groups.nixbot.name;
     content = builtins.toJSON {
       nixInstantiatePath = "${nixFlakes}/bin/nix-instantiate";
       nixPath = [ "nixpkgs=${nixpkgs}" ];
@@ -154,5 +160,53 @@ in {
       };
       token = "${plh.t-nix-token}";
     };
+  };
+
+  users.groups.beancount = { };
+  users.users.beancount = {
+    createHome = true;
+    group = groups.beancount.name;
+    isSystemUser = true;
+    home = "/var/lib/beancount";
+  };
+
+  services.nginx.virtualHosts.${dp.f-host} = {
+    forceSSL = true;
+    enableACME = true;
+    locations."/" = {
+      proxyPass = "http://localhost:${dp.f-port}";
+      basicAuthFile = tpl.authFile.path;
+    };
+  };
+  sops.templates.authFile = {
+    owner = config.services.nginx.user;
+    group = config.services.nginx.group;
+    content = ''
+      ${plh.f-user}:{PLAIN}${plh.f-password}
+    '';
+  };
+
+  systemd.services.fava = {
+    description = "Fava";
+    after = [ "network.target" ];
+    wantedBy = [ "multi-user.target" ];
+    serviceConfig = {
+      User = users.beancount.name;
+      Group = groups.beancount.name;
+      SupplementaryGroups = [ groups.keys.name ];
+      Restart = "always";
+      WorkingDirectory = users.beancount.home;
+    };
+    preStart = ''
+      if [[ ! -e main.bean || ! -s main.bean || -z $(${gnugrep}/bin/grep '[^[:space:]]' main.bean) ]];then
+      ${coreutils}/bin/cat > main.bean <<EOF
+      option "title" "账本"
+      option "operating_currency" "CNY"
+      EOF
+      fi
+    '';
+    script = ''
+      exec ${fava}/bin/fava --port ${dp.f-port} main.bean
+    '';
   };
 }

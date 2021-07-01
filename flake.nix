@@ -168,7 +168,7 @@
         };
         net = mkApp {
           drv = writeShellScriptBin "net" ''
-            ${deploy-rs.packages.${system}.deploy-rs}/bin/deploy
+            ${deploy-rs.packages.${system}.deploy-rs}/bin/deploy "${toString self}" "$@"
           '';
         };
       };
