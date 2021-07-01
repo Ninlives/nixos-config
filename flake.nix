@@ -65,7 +65,6 @@
 
       nixosConfigurations.mlatus = let
         modules = [
-
           ./world-implementation
           ./secrets
           sops-nix.nixosModules.sops
@@ -134,7 +133,7 @@
             (dirs.world.option + /secrets.nix)
             sops-nix.nixosModules.sops
             external.nixosModules.nixos-cn
-            ({ ... }: { sops.sshKeyPaths = [ "/var/lib/sops/vultr" ]; })
+            ({ ... }: { sops.sshKeyPaths = [ "/var/lib/sops/key" ]; })
           ];
         };
       in {
@@ -167,8 +166,44 @@
           '';
         };
         net = mkApp {
-          drv = writeShellScriptBin "net" ''
-            ${deploy-rs.packages.${system}.deploy-rs}/bin/deploy "${toString self}" "$@"
+          drv = let
+            def = toString self;
+            key = "/var/lib/sops/key";
+            dir = "/var/lib/sops";
+            host = deploy.nodes.cyber.hostname;
+          in writeShellScriptBin "net" ''
+            export PATH=${
+              makeBinPath [
+                openssh
+                coreutils
+                deploy-rs.packages.${system}.deploy-rs
+              ]
+            }
+            # <<<sh>>>
+            set -e
+            tmp=$(mktemp -d)
+
+            function cleanup() {
+              if [[ -d "$tmp" ]];then
+                rm -rf "$tmp"
+              fi
+
+              while true;do
+                echo 'Removing keyfile on server...'
+                ssh root@${host} 'if [[ -e ${key} ]];then rm ${key};fi' \
+                && break || echo 'Failed, try again.'
+              done
+            }
+            trap cleanup EXIT
+
+            keyFile=$1
+            shift
+            cp "$keyFile" "$tmp/key"
+            ssh-keygen -p -N "" -f "$tmp/key"
+            ssh root@${host} 'mkdir -p ${dir};if [[ -e ${key} ]];then rm ${key};fi'
+            scp "$tmp/key" root@${host}:${key}
+            deploy "${def}" "$@"
+            # >>>sh<<<
           '';
         };
       };
