@@ -184,6 +184,7 @@
             tmp=$(mktemp -d)
 
             function cleanup() {
+              set +e
               if [[ -d "$tmp" ]];then
                 rm -rf "$tmp"
               fi
