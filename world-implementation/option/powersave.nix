@@ -1,7 +1,7 @@
 { config, pkgs, lib, out-of-world, ... }:
 with lib;
 let
-  inherit (pkgs) libsmbios;
+  inherit (pkgs) glib;
   inherit (pkgs.nixos-cn) intel-undervolt;
   inherit (out-of-world) dirs;
 in {
@@ -12,42 +12,20 @@ in {
 
   config = mkMerge [
     {
-      systemd.services.smbios-thermal = {
-        wantedBy = [ "multi-user.target" ];
-        serviceConfig.type = "oneshot";
+      systemd.services.power-profile = {
+        wantedBy = [ "power-profiles-daemon.service" ];
+        after = [ "power-profiles-daemon.service" ];
+        serviceConfig.Type = "oneshot";
+        script = ''
+          ${glib}/bin/gdbus call --system --dest net.hadess.PowerProfiles --object-path /net/hadess/PowerProfiles --method org.freedesktop.DBus.Properties.Set 'net.hadess.PowerProfiles' 'ActiveProfile' "<'${if config.powersave.enable then "power-saver" else "performance"}'>"
+        '';
       };
     }
     (mkIf (!config.powersave.enable) {
       powerManagement.cpuFreqGovernor = "performance";
-      systemd.services.smbios-thermal.script =
-        "${libsmbios}/bin/smbios-thermal-ctl --set-thermal-mode=performance";
     })
     (mkIf config.powersave.enable {
       powerManagement.cpuFreqGovernor = "powersave";
-      systemd.services.smbios-thermal.script =
-        "${libsmbios}/bin/smbios-thermal-ctl --set-thermal-mode=quiet";
-      systemd.packages = [ intel-undervolt ];
-      systemd.services.intel-undervolt.wantedBy = [
-        "multi-user.target"
-        "suspend.target"
-        "hibernate.target"
-        "hybrid-sleep.target"
-      ];
-      environment.etc."intel-undervolt.conf".text = ''
-        # <<<conf>>>
-        # CPU Undervolting
-        undervolt 0 'CPU' -155
-        undervolt 1 'GPU' -110
-        undervolt 2 'CPU Cache' -140
-        undervolt 3 'System Agent' 0
-        undervolt 4 'Analog I/O' 0
-
-        # Daemon Update Interval
-        interval 5000
-        # >>>conf<<<
-      '';
-
-      # services.tlp.enable = true;
       services.thermald.enable = true;
 
       boot.extraModprobeConfig = ''

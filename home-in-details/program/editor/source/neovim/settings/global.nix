@@ -36,6 +36,7 @@ in {
         vim-toml
         haskell-vim
         vim-vala
+        vim-beancount
       ];
 
     externalDependencies = [ fzf ripgrep fd bat ];
