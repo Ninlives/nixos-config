@@ -10,6 +10,7 @@ let
   '';
   groups = config.users.groups;
   users = config.users.users;
+  scrt = config.sops.secrets;
 in {
   imports = [ ./machine.nix ];
 
@@ -17,7 +18,12 @@ in {
   security.acme.acceptTerms = true;
   security.acme.email = "${dp.email}";
 
-  networking.firewall.allowedTCPPorts = [ 80 443 ];
+  networking.firewall.allowedTCPPorts = with config.services.syncthing.relay; [
+    port
+    statusPort
+    80
+    443
+  ];
   networking.firewall.allowedUDPPorts = [ 443 ];
   services.nginx.enable = true;
   systemd.services.nginx.serviceConfig.SupplementaryGroups =
@@ -162,14 +168,6 @@ in {
     };
   };
 
-  users.groups.beancount = { };
-  users.users.beancount = {
-    createHome = true;
-    group = groups.beancount.name;
-    isSystemUser = true;
-    home = "/var/lib/beancount";
-  };
-
   services.nginx.virtualHosts.${dp.f-host} = {
     forceSSL = true;
     enableACME = true;
@@ -191,11 +189,11 @@ in {
     after = [ "network.target" ];
     wantedBy = [ "multi-user.target" ];
     serviceConfig = {
-      User = users.beancount.name;
-      Group = groups.beancount.name;
+      User = config.services.syncthing.user;
+      Group = config.services.syncthing.group;
       SupplementaryGroups = [ groups.keys.name ];
       Restart = "always";
-      WorkingDirectory = users.beancount.home;
+      WorkingDirectory = "/var/lib/beancount";
     };
     preStart = ''
       if [[ ! -e main.bean || ! -s main.bean || -z $(${gnugrep}/bin/grep '[^[:space:]]' main.bean) ]];then
@@ -208,5 +206,23 @@ in {
     script = ''
       exec ${fava}/bin/fava --port ${dp.f-port} main.bean
     '';
+  };
+
+  services.syncthing = {
+    enable = true;
+    openDefaultPorts = true;
+    declarative = {
+      cert = scrt.s-cert-server.path;
+      key = scrt.s-key-server.path;
+      devices.local.id = config.secrets.decrypted.s-id-local;
+      folders.beancount = {
+        path = config.systemd.services.fava.serviceConfig.WorkingDirectory;
+        devices = [ "local" ];
+        versioning.type = "simple";
+        versioning.params.keep = "20";
+      };
+    };
+    relay.enable = true;
+    relay.providedBy = "Somebody";
   };
 }

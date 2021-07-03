@@ -170,17 +170,19 @@
             def = toString self;
             key = "/var/lib/sops/key";
             dir = "/var/lib/sops";
-            host = deploy.nodes.cyber.hostname;
+            host = self.deploy.nodes.cyber.hostname;
           in writeShellScriptBin "net" ''
             export PATH=${
               makeBinPath [
+                git
                 openssh
                 coreutils
+                nixFlakes
                 deploy-rs.packages.${system}.deploy-rs
               ]
             }
             # <<<sh>>>
-            set -e
+            set -ex
             tmp=$(mktemp -d)
 
             function cleanup() {
@@ -203,7 +205,8 @@
             ssh-keygen -p -N "" -f "$tmp/key"
             ssh root@${host} 'mkdir -p ${dir};if [[ -e ${key} ]];then rm ${key};fi'
             scp "$tmp/key" root@${host}:${key}
-            deploy "${def}" "$@"
+            rm -rf "$tmp"
+            deploy "${def}" -- --show-trace
             # >>>sh<<<
           '';
         };
