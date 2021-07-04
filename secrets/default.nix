@@ -6,6 +6,7 @@ let
   s = k: tpl k ./data/shadowsocks.yaml;
   t = k: tpl k ./data/telegram.yaml;
   f = k: tpl k ./data/fava.yaml;
+  m = k: tpl k ./data/mastodon.yaml;
 in
 {
   sops.defaultSopsFile = ./data/tokens.yaml;
@@ -29,6 +30,9 @@ in
   sops.secrets.s-key-server = bin ./data/syncthing/vultr/key.pem;
   sops.secrets.s-cert-local = bin ./data/syncthing/local/cert.pem;
   sops.secrets.s-key-local = bin ./data/syncthing/local/key.pem;
+
+  sops.secrets.m-db-password = m "db-password";
+  sops.secrets.m-smtp-password = m "smtp-password";
 
   imports = [ ./encrypt ];
 }

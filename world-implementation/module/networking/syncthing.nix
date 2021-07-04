@@ -1,4 +1,4 @@
-{ constant, config, ... }: {
+{ constant, config, pkgs, ... }: {
   services.syncthing = {
     enable = true;
     user = constant.user.name;
@@ -16,5 +16,14 @@
         versioning.params.keep = "20";
       };
     };
+  };
+
+  systemd.services.cleanup-syncthing = {
+    wantedBy = [ "syncthing.service" ];
+    after = [ "syncthing.service" ];
+    script = ''
+      ${pkgs.coreutils}/bin/rm -rf "${constant.user.config.home}/Sync"
+    '';
+    serviceConfig.Type = "oneshot";
   };
 }
