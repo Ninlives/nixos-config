@@ -26,6 +26,7 @@ in {
   ];
   networking.firewall.allowedUDPPorts = [ 443 ];
   services.nginx.enable = true;
+  services.nginx.recommendedProxySettings = true;
   systemd.services.nginx.serviceConfig.SupplementaryGroups =
     [ groups.keys.name ];
 
@@ -34,19 +35,15 @@ in {
     enableACME = true;
     locations = {
       "/".root = "/${dp.v-root-location}";
-      "/${dp.v-secret-path}".extraConfig = ''
-        if ($http_upgrade != "websocket") {
-          return 404;
-        }
-        proxy_redirect off;
-        proxy_pass http://127.0.0.1:${dp.v-internal-port};
-        proxy_http_version 1.1;
-        proxy_set_header Upgrade $http_upgrade;
-        proxy_set_header Connection "upgrade";
-        proxy_set_header Host $host;
-        proxy_set_header X-Real-IP $remote_addr;
-        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
-      '';
+      "/${dp.v-secret-path}" = {
+        proxyPass = "http://127.0.0.1:${dp.v-internal-port}";
+        proxyWebsockets = true;
+        extraConfig = ''
+          if ($http_upgrade != "websocket") {
+            return 404;
+          }
+        '';
+      };
     };
   };
 
@@ -82,6 +79,8 @@ in {
     }];
   };
 
+  #  Nixbot
+  # ========
   users.groups.nixbot = { };
   users.users.nixbot = {
     createHome = true;
@@ -164,9 +163,21 @@ in {
           }
         '';
       };
-      token = "${plh.t-nix-token}";
+      token = plh.t-nix-token;
     };
   };
+
+  #  Mastodon
+  # ==========
+
+  services.mastodon = {
+    enable = true;
+    configureNginx = true;
+    localDomain = dp.m-host;
+  };
+
+  #  Beancount
+  # ===========
 
   services.nginx.virtualHosts.${dp.f-host} = {
     forceSSL = true;
@@ -196,17 +207,17 @@ in {
       WorkingDirectory = "/var/lib/beancount";
     };
     preStart = ''
-      if [[ ! -e main.bean || ! -s main.bean || -z $(${gnugrep}/bin/grep '[^[:space:]]' main.bean) ]];then
-      ${coreutils}/bin/cat > main.bean <<EOF
-      option "title" "账本"
-      option "operating_currency" "CNY"
-      EOF
-      fi
+      while [[ ! -e main.bean ]];do
+        sleep 3
+      done
     '';
     script = ''
       exec ${fava}/bin/fava --port ${dp.f-port} main.bean
     '';
   };
+
+  #  Syncthing
+  # ===========
 
   services.syncthing = {
     enable = true;

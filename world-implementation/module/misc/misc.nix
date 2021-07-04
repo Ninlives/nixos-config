@@ -20,6 +20,8 @@ in {
 
   users.mutableUsers = false;
 
-  users.users."${user.name}" = user.config;
+  users.users."${user.name}" = user.config // {
+    hashedPassword = config.secrets.decrypted.hashed-password;
+  };
   system.stateVersion = "18.09";
 }

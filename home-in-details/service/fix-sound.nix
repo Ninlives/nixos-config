@@ -3,12 +3,9 @@ let
   inherit (pkgs) writeShellScript dbus;
   fixSoundScript = writeShellScript "fix" ''
     ${nixosConfig.hardware.pulseaudio.package}/bin/pactl \
-      set-sink-port \
-      alsa_output.pci-0000_00_1f.3-platform-skl_hda_dsp_generic.HiFi__hw_sofhdadsp__sink \
-      '[Out] Speaker'
+      set-sink-port 3 '[Out] Speaker'
     ${nixosConfig.hardware.pulseaudio.package}/bin/pactl \
-      set-sink-volume \
-      alsa_output.pci-0000_00_1f.3-platform-skl_hda_dsp_generic.HiFi__hw_sofhdadsp__sink 50%
+      set-sink-volume 3 50%
   '';
 in {
   systemd.user.services.fix-sound = {

@@ -32,7 +32,6 @@ with pkgs; {
         "networkmanager"
       ];
       shell = pkgs.zsh;
-      hashedPassword = "$6$SB0FV9TDHnhwd$e1YWxYvKR8.yXSUgbDaYKZPcFZBeatqjPr2QD1i5t9deirCuiNFj/g4HlteoYr5SPruinPBtmlWV0jZe25WCU.";
     };
   };
 }
