@@ -87,9 +87,30 @@
 
             ({ pkgs, ... }: {
               environment.systemPackages = [
-                (pkgs.runCommand "flake-zsh-completion" { } ''
-                  mkdir -p $out/share/zsh/site-functions
-                  cp ${pkgs.nixFlakes.src}/misc/zsh/completion.zsh $out/share/zsh/site-functions/_nix
+                (pkgs.writeTextDir "share/zsh/site-functions/_nix" ''
+                  # <<<sh>>>
+                  function _nix() {
+                    local ifs_bk="$IFS"
+                    local input=("''${(Q)words[@]}")
+                    IFS=$'\n'
+                    local res=($(NIX_GET_COMPLETIONS=$((CURRENT - 1)) "$input[@]"))
+                    IFS="$ifs_bk"
+                    local tpe="''${''${res[1]}%%>	*}"
+                    local -a suggestions
+                    declare -a suggestions
+                    for suggestion in ''${res:1}; do
+                      # FIXME: This doesn't work properly if the suggestion word contains a `:`
+                      # itself
+                      suggestions+="''${suggestion/	/:}"
+                    done
+                    if [[ "$tpe" == filenames ]]; then
+                      compadd -f
+                    fi
+                    _describe 'nix' suggestions
+                  }
+                  
+                  _nix "$@"
+                  # >>>sh<<<
                 '')
                 (pkgs.writeShellScriptBin "emerge" ''
                   app=$1
