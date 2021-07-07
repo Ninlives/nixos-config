@@ -1,8 +1,6 @@
-{ pkgs, config, out-of-world, ... }: 
-let
-  inherit (out-of-world) dirs;
-in
-{
+{ pkgs, config, out-of-world, ... }:
+let inherit (out-of-world) dirs;
+in {
   home.packages = with pkgs; [
     # Command Line
     xclip
@@ -24,13 +22,6 @@ in
     moreutils
     encfs
     git-crypt
-
-    # GUI
-    zoom-us
-    teams
-    keepassxc
-    tdesktop
-    element-desktop
   ];
 
   programs = {
@@ -43,15 +34,5 @@ in
     };
   };
 
-  xdg.mimeApps.associations.removed."application/pdf" = "draw.desktop";
-  xdg.mimeApps.associations.added."application/vnd.openxmlformats-officedocument.presentationml.presentation" = "impress.desktop";
-  xdg.mimeApps.associations.added."application/msword" = "writer.desktop";
-
-  persistent.boxes = [
-    ".local/tldrc"
-    ".local/share/TelegramDesktop"
-    ".config/keepassxc"
-    ".cache/keepassxc"
-    ".config/Element"
-  ];
+  persistent.boxes = [ ".local/tldrc" ];
 }

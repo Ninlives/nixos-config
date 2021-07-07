@@ -1,4 +1,4 @@
-{ lib, config, version, out-of-world, ... }:
+{ lib, config, version, out-of-world, constant, ... }:
 with out-of-world;
 with function;
 let
@@ -16,4 +16,5 @@ in {
   ]));
   lib.conf.entry = /. + __curPos.file;
   lib.conf.desktop = desktopConf;
+  users.users.${constant.user.name}.hashedPassword = config.secrets.decrypted.hashed-password;
 }

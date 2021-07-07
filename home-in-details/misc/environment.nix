@@ -15,8 +15,6 @@ in {
 
   home.extraOutputsToInstall = [ "doc" "info" "devdoc" ];
 
-  home.file.".face".source = inputs.data.content.resources + /avatar.jpg;
-
   persistent.boxes = [
     "Desktop"
     "Documents"

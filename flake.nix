@@ -58,71 +58,81 @@
         android_sdk.accept_license = true;
         allowUnsupportedSystem = true;
       };
+
+      mkNixOS = extraConfig:
+        let
+          modules = [
+            external.nixosModules.nixos-cn-registries
+            external.nixosModules.nixos-cn
+            home-manager.nixosModules.home-manager
+
+            ({ ... }: {
+              home-manager.useGlobalPkgs = true;
+              home-manager.useUserPackages = true;
+              home-manager.extraSpecialArgs = specialArgs;
+            })
+
+            ({ ... }: {
+              system.nixos.tags = mkAfter [ commitMsg ];
+              nixpkgs.overlays = mergedOverlays;
+              nixpkgs.config = nixpkgsConfig;
+
+              nix.registry.emerge.to = {
+                type = "path";
+                path = toString entry;
+              };
+              revive.specifications.with-snapshot-home.boxes =
+                [ entry secrets ];
+            })
+
+            ({ pkgs, ... }: {
+              environment.systemPackages = [
+                (pkgs.runCommand "flake-zsh-completion" { } ''
+                  mkdir -p $out/share/zsh/site-functions
+                  cp ${pkgs.nixFlakes.src}/misc/zsh/completion.zsh $out/share/zsh/site-functions/_nix
+                '')
+                (pkgs.writeShellScriptBin "emerge" ''
+                  app=$1
+                  shift
+                  nix run emerge#$app -- $@
+                '')
+              ];
+            })
+          ] ++ extraConfig;
+          preprocess =
+            nixpkgs.lib.nixosSystem { inherit system specialArgs modules; };
+        in nixpkgs.lib.nixosSystem {
+          inherit system specialArgs;
+          modules = modules ++ (builtins.attrValues
+            preprocess.config.home-manager.users.${constant.user.name}.nixosConfig);
+        };
+
     in with pkgs;
     with out-of-world; {
 
-      exports = { inherit out-of-world constant; };
+      nixosConfigurations.mlatus = mkNixOS [
+        ./world-implementation
+        ./secrets
+        sops-nix.nixosModules.sops
 
-      nixosConfigurations.mlatus = let
-        modules = [
-          ./world-implementation
-          ./secrets
-          sops-nix.nixosModules.sops
-          external.nixosModules.nixos-cn-registries
-          external.nixosModules.nixos-cn
-          home-manager.nixosModules.home-manager
+        ({ config, ... }: {
+          sops.encryptedSSHKeyPaths = [ "/var/lib/sops/local" ];
+          system.activationScripts.pre-sops.deps =
+            mkIf config.revive.enable [ "revive" ];
+          users.users.${constant.user.name}.extraGroups =
+            [ config.users.groups.keys.name ];
 
-          ({ ... }: {
-            home-manager.useGlobalPkgs = true;
-            home-manager.useUserPackages = true;
-            home-manager.users.${constant.user.name} = import ./home-in-details;
-            home-manager.extraSpecialArgs = specialArgs;
-          })
+          home-manager.users.${constant.user.name} = import ./home-in-details;
+        })
+      ];
 
-          ({ ... }: {
-            system.nixos.tags = mkAfter [ commitMsg ];
-            nixpkgs.overlays = mergedOverlays;
-            nixpkgs.config = nixpkgsConfig;
-
-            nix.registry.emerge.to = {
-              type = "path";
-              path = toString entry;
-            };
-            revive.specifications.with-snapshot-home.boxes = [ entry secrets ];
-          })
-
-          ({ pkgs, ... }: {
-            environment.systemPackages = [
-              (pkgs.runCommand "flake-zsh-completion" { } ''
-                mkdir -p $out/share/zsh/site-functions
-                cp ${pkgs.nixFlakes.src}/misc/zsh/completion.zsh $out/share/zsh/site-functions/_nix
-              '')
-              (pkgs.writeShellScriptBin "emerge" ''
-                app=$1
-                shift
-                nix run emerge#$app -- $@
-              '')
-            ];
-          })
-
-          ({ config, ... }:
-            let dump.owner = constant.user.name;
-            in {
-              sops.encryptedSSHKeyPaths = [ "/var/lib/sops/local" ];
-              system.activationScripts.pre-sops.deps =
-                mkIf config.revive.enable [ "revive" ];
-
-              users.users.${constant.user.name}.extraGroups =
-                [ config.users.groups.keys.name ];
-            })
-        ];
-        preprocess =
-          nixpkgs.lib.nixosSystem { inherit system specialArgs modules; };
-      in nixpkgs.lib.nixosSystem {
-        inherit system specialArgs;
-        modules = modules ++ (builtins.attrValues
-          preprocess.config.home-manager.users.${constant.user.name}.nixosConfig);
-      };
+      nixosConfigurations.wsl = mkNixOS [
+        ./world-implementation/wsl
+        ({ config, ... }: {
+          home-manager.users.${constant.user.name} =
+            import ./home-in-details/wsl.nix;
+        })
+      ];
 
       deploy.nodes.cyber = let
         definition = nixpkgs.lib.nixosSystem {
@@ -149,22 +159,24 @@
         config = nixpkgsConfig;
       };
 
-      apps.${system} = {
-        world = mkApp {
-          drv = let
-            toplevel =
-              self.nixosConfigurations.mlatus.config.system.build.toplevel;
-          in writeShellScriptBin "world" ''
-            if [[ $1 == "build" ]];then
-              echo "Build finished"
-            else
-              if [[ $1 != "test" ]];then
-                sudo ${nixFlakes}/bin/nix-env -p /nix/var/nix/profiles/system --set ${toplevel}
+      apps.${system} = let
+        fire = os:
+          mkApp {
+            drv = let toplevel = os.config.system.build.toplevel;
+            in writeShellScriptBin "world" ''
+              if [[ $1 == "build" ]];then
+                echo "Build finished"
+              else
+                if [[ $1 != "test" ]];then
+                  sudo ${nixFlakes}/bin/nix-env -p /nix/var/nix/profiles/system --set ${toplevel}
+                fi
+                exec sudo ${toplevel}/bin/switch-to-configuration "$@"
               fi
-              exec sudo ${toplevel}/bin/switch-to-configuration "$@"
-            fi
-          '';
-        };
+            '';
+          };
+      in {
+        world = fire self.nixosConfigurations.mlatus;
+        wsl = fire self.nixosConfigurations.wsl;
         net = mkApp {
           drv = let
             def = toString self;
