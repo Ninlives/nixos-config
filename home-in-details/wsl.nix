@@ -7,7 +7,7 @@
     ./misc/registry.nix
     ./misc/xdg.nix
     ./program/dircolors
-    ./program/editor
+    ./program/neovim
     ./program/ranger
     ./program/zsh
   ];

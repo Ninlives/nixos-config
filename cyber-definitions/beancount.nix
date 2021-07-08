@@ -37,13 +37,14 @@ in {
         mkdir -p "${dir}"
         chown -R "${sync-user}" "${dir}"
         chgrp -R "${sync-group}" "${dir}"
+        cd "${dir}"
       ''}";
     };
     script = ''
-      while [[ ! -e main.bean ]];do
+      while [[ ! -e "${dir}/main.bean" ]];do
         sleep 3
       done
-      exec ${pkgs.fava}/bin/fava --port ${dp.f-port} main.bean
+      exec ${pkgs.fava}/bin/fava --port ${dp.f-port} "${dir}/main.bean"
     '';
   };
 

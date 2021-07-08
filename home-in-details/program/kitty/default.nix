@@ -23,14 +23,10 @@ in {
   programs = {
     kitty = {
       enable = true;
-      font = {
-        package = nerdfonts.override { fonts = [ "FantasqueSansMono" ]; };
-        name = "FantasqueSansMono Nerd Font Mono";
-      };
       settings = {
         include = "${./gruvbox.conf}";
+
         font_size = 14;
-        symbol_map = "${mapUnicodes cjkUnicodes} Noto Sans SC";
 
         disable_ligatures = "cursor";
         cursor_shape = "underline";
