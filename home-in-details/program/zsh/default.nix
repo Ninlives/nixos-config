@@ -57,7 +57,6 @@ in {
         plugins = [
           "git"
           "vi-mode"
-          "z"
           "extract"
           "taskwarrior"
           # "tmux"

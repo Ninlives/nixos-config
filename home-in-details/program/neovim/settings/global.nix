@@ -29,14 +29,6 @@ in {
         nerdtree-syntax-highlight
         vibusen
         boxdraw
-
-        vim-pandoc
-        vim-pandoc-syntax
-        vim-nix
-        vim-toml
-        haskell-vim
-        vim-vala
-        vim-beancount
       ];
 
     externalDependencies = [ fzf ripgrep fd bat ];

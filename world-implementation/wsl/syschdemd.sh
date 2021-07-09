@@ -40,4 +40,5 @@ if [[ $# -gt 0 ]]; then
 else
     cmd="$userShell"
 fi
-exec $sw/nsenter -t $(< /run/systemd.pid) -p -m -- $sw/machinectl -q --uid=@defaultUser@ shell .host /bin/sh -c "cd \"$PWD\"; exec $cmd"
+exportCmd="export VSCODE_WSL_EXT_LOCATION=\"$VSCODE_WSL_EXT_LOCATION\""
+exec $sw/nsenter -t $(< /run/systemd.pid) -p -m -- $sw/machinectl -q --uid=@defaultUser@ shell .host /bin/sh -c "cd \"$PWD\"; $exportCmd; exec $cmd"

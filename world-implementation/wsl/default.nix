@@ -6,6 +6,8 @@ let
   syschdemd = import ./syschdemd.nix { inherit lib pkgs config defaultUser; };
 in {
   imports = [
+    ./persistent.nix
+    ../registry.nix
     ../option/revive.nix
     ../module/misc/misc.nix
     ../module/misc/nix-itself.nix
@@ -16,8 +18,6 @@ in {
 
   users.users.${constant.user.name}.hashedPassword =
     "$6$B1/Ik6hH9rO4cMOa$br3adtoYXGgnxR2m7dCEm.iivVR1faE/GvzZndVIH/z/qB8KES14Fb0lCuXPHgYgmxAbHZEvQ3y2YuQy/8wmk.";
-
-  revive.enable = false;
 
   # WSL is closer to a container than anything else
   boot.isContainer = true;
@@ -33,7 +33,7 @@ in {
     extraGroups = [ "root" ];
   };
 
-  security.sudo.wheelNeedsPassword = false;
+  security.sudo.wheelNeedsPassword = true;
 
   # Disable systemd units that don't make sense on WSL
   systemd.services."serial-getty@ttyS0".enable = false;

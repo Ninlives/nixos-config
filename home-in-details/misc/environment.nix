@@ -9,9 +9,9 @@ in {
     LESSHISTFILE = "${homeDirectory}/.local/less_history";
     RLWRAP_HOME = "${homeDirectory}/.local";
     KEYTIMEOUT = "1";
-    _Z_DATA = "${homeDirectory}/.local/z/z";
     NIX_AUTO_RUN = "!";
   };
+  home.stateVersion = "20.09";
 
   home.extraOutputsToInstall = [ "doc" "info" "devdoc" ];
 
