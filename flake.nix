@@ -4,7 +4,6 @@
 
   inputs.nixpkgs.url = "github:NixOS/nixpkgs/nixos-unstable-small";
   inputs.sops-nix.url = "github:Mic92/sops-nix";
-  inputs.deploy-rs.url = "github:serokell/deploy-rs";
   inputs.home-manager = {
     url = "github:nix-community/home-manager";
     inputs.nixpkgs.follows = "nixpkgs";
@@ -16,8 +15,8 @@
   };
   inputs.data.url = "github:Ninlives/data";
 
-  outputs = { self, nixpkgs, home-manager, deploy-rs, flake-utils, external
-    , sops-nix, data }@inputs:
+  outputs = { self, nixpkgs, home-manager, flake-utils, external, sops-nix, data
+    }@inputs:
     with flake-utils.lib;
     with nixpkgs.lib;
     let
@@ -108,7 +107,7 @@
                     fi
                     _describe 'nix' suggestions
                   }
-                  
+
                   _nix "$@"
                   # >>>sh<<<
                 '')
@@ -155,23 +154,16 @@
         })
       ];
 
-      deploy.nodes.cyber = let
-        definition = nixpkgs.lib.nixosSystem {
-          inherit system specialArgs;
-          modules = [
-            ./cyber-definitions
-            ./secrets
-            (dirs.world.option + /secrets.nix)
-            sops-nix.nixosModules.sops
-            external.nixosModules.nixos-cn
-            ({ ... }: { sops.sshKeyPaths = [ "/var/lib/sops/key" ]; })
-          ];
-        };
-      in {
-        sshUser = "root";
-        hostname = definition.config.secrets.decrypted.v-host;
-        profiles.system.path =
-          deploy-rs.lib.${system}.activate.nixos definition;
+      nixosConfigurations.cyber = nixpkgs.lib.nixosSystem {
+        inherit system specialArgs;
+        modules = [
+          ./cyber-definitions
+          ./secrets
+          (dirs.world.option + /secrets.nix)
+          sops-nix.nixosModules.sops
+          external.nixosModules.nixos-cn
+          ({ ... }: { sops.sshKeyPaths = [ "/var/lib/sops/key" ]; })
+        ];
       };
 
       legacyPackages.${system} = import nixpkgs {
@@ -200,10 +192,11 @@
         wsl = fire self.nixosConfigurations.wsl;
         net = mkApp {
           drv = let
-            def = toString self;
+            node = self.nixosConfigurations.cyber.config;
+            def = node.system.build.toplevel;
             key = "/var/lib/sops/key";
             dir = "/var/lib/sops";
-            host = self.deploy.nodes.cyber.hostname;
+            host = node.secrets.decrypted.v-host;
           in writeShellScriptBin "net" ''
             export PATH=${
               makeBinPath [
@@ -211,19 +204,19 @@
                 openssh
                 coreutils
                 nixFlakes
-                deploy-rs.packages.${system}.deploy-rs
               ]
             }
             # <<<sh>>>
             set -ex
             tmp=$(mktemp -d)
+            shift
+            keyFile=$1
+            shift
+            key="$tmp/key"
 
             function cleanup() {
               set +e
-              if [[ -d "$tmp" ]];then
-                rm -rf "$tmp"
-              fi
-
+              rm -rf "$tmp"
               while true;do
                 echo 'Removing keyfile on server...'
                 ssh root@${host} 'if [[ -e ${key} ]];then rm ${key};fi' \
@@ -232,14 +225,14 @@
             }
             trap cleanup EXIT
 
-            keyFile=$1
-            shift
-            cp "$keyFile" "$tmp/key"
-            ssh-keygen -p -N "" -f "$tmp/key"
+            cp "$keyFile" "$key"
+            echo Decrypt Key File
+            ssh-keygen -p -N "" -f "$key"
             ssh root@${host} 'mkdir -p ${dir};if [[ -e ${key} ]];then rm ${key};fi'
-            scp "$tmp/key" root@${host}:${key}
-            rm -rf "$tmp"
-            deploy "${def}" -- --show-trace
+            scp "$key" root@${host}:${key}
+            rm "$key"
+            nix copy -s --to ssh://root@${host} "${def}"
+            ssh root@${host} ${def}/bin/switch-to-configuration switch
             # >>>sh<<<
           '';
         };

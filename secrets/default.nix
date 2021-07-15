@@ -7,6 +7,7 @@ let
   t = k: tpl k ./data/telegram.yaml;
   f = k: tpl k ./data/fava.yaml;
   m = k: tpl k ./data/mastodon.yaml;
+  w = k: tpl k ./data/wireguard.yaml;
 in
 {
   sops.defaultSopsFile = ./data/tokens.yaml;
@@ -33,6 +34,10 @@ in
 
   sops.secrets.m-db-password = m "db-password";
   sops.secrets.m-smtp-password = m "smtp-password";
+
+  sops.secrets.w-preshared-key = w "preshared-key";
+  sops.secrets.w-server-private-key = w "server-private-key";
+  sops.secrets.w-local-private-key = w "local-private-key";
 
   imports = [ ./encrypt ];
 }

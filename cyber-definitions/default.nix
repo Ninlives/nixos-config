@@ -3,7 +3,13 @@ let
   dp = config.secrets.decrypted;
   groups = config.users.groups;
 in {
-  imports = [ ./machine.nix ./science.nix ./beancount.nix ./syncthing.nix ];
+  imports = [
+    ./machine.nix
+    ./science.nix
+    ./beancount.nix
+    ./syncthing.nix
+    ./wireguard.nix
+  ];
 
   nixpkgs.config.allowUnfree = true;
   security.acme.acceptTerms = true;

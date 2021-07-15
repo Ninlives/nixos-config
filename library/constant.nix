@@ -34,4 +34,18 @@ with pkgs; {
       shell = pkgs.zsh;
     };
   };
+
+  net = {
+    default = {
+      subnet = "172.16.0.0/12";
+      server = {
+        address = "172.16.0.1";
+        prefixLength = "12";
+      };
+      local = {
+        address = "172.16.0.2";
+        prefixLength = "12";
+      };
+    };
+  };
 }

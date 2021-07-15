@@ -4,7 +4,7 @@ let
   scrt = config.sops.secrets;
 in {
   services.mastodon = {
-    enable = false;
+    enable = true;
     configureNginx = true;
     localDomain = dp.m-host;
     database.passwordFile = scrt.m-db-password.path;

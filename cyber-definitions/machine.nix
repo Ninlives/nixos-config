@@ -2,15 +2,16 @@
 with pkgs;
 let
   ifname = "ens3";
-in
-{
-  imports = [ 
-    (modulesPath + "/profiles/qemu-guest.nix") 
+  dp = config.secrets.decrypted;
+in {
+  imports = [
+    (modulesPath + "/profiles/qemu-guest.nix")
     (modulesPath + "/profiles/hardened.nix")
   ];
   boot = {
     loader.grub.device = "/dev/sda";
-    initrd.availableKernelModules = [ "ata_piix" "uhci_hcd" "virtio_pci" "sr_mod" "virtio_blk" ];
+    initrd.availableKernelModules =
+      [ "ata_piix" "uhci_hcd" "virtio_pci" "sr_mod" "virtio_blk" ];
     kernel.sysctl = {
       "net.ipv6.conf.${ifname}.use_tempaddr" = 0;
       "net.core.default_qdisc" = "fq";
@@ -39,19 +40,12 @@ in
     DNSStubListener=no
   '';
 
-  environment.etc."ssh/keys" = {
-    mode = "0555";
-    text = ''
-      #!${pkgs.runtimeShell}
-      ${pkgs.curl}/bin/curl https://github.com/Ninlives.keys
-    '';
-  };
-
   services.openssh = {
     enable = true;
-    authorizedKeysCommand = "/etc/ssh/keys";
     passwordAuthentication = false;
   };
+
+  users.users.root.openssh.authorizedKeys.keys = [ dp.h-server-auth ];
 
   nix.autoOptimiseStore = true;
 }
