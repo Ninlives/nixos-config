@@ -9,10 +9,12 @@ in {
   revive.specifications.with-snapshot-home = {
     seal = chest;
     user = user.name;
+    group = config.users.groups.users.name;
   };
   revive.specifications.no-snapshot-home = {
     seal = space;
     user = user.name;
+    group = config.users.groups.users.name;
   };
 
   fileSystems."/chest".neededForBoot = true;

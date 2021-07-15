@@ -9,6 +9,4 @@ in {
     dirs.home.service
     dirs.home.program
   ]);
-
-  home.stateVersion = "20.09";
 }

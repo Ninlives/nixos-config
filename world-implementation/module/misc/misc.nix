@@ -11,8 +11,6 @@ in {
   services.printing.enable = true;
   services.printing.drivers = [ gutenprint gutenprintBin ];
 
-  networking.hostName = "nixos";
-  networking.networkmanager.enable = true;
   revive.specifications.with-snapshot.boxes =
     [ /etc/NetworkManager/system-connections /var/lib/bluetooth ];
 
